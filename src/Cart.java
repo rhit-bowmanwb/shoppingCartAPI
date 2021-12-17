@@ -9,13 +9,14 @@ public class Cart {
 	private int cartID;
 	private double cost = 0;
 	private Database db;
-	private Tax tax;
 	private HashMap<Item, Integer> mapItemsToQuantity = new HashMap<Item, Integer>();
 	private Set<Discount> discounts = new HashSet<Discount>();
+	private CostComputer costComputer;
 
-	public Cart(int cartID, Database db) {
+	public Cart(int cartID, Database db, CostComputer comp) {
 		this.cartID = cartID;
 		this.db = db;
+		this.costComputer = comp;
 	}
 
 	boolean addItem(Item item, int quantity) {
@@ -25,12 +26,12 @@ public class Cart {
 			int numInCart = this.mapItemsToQuantity.get(item);
 			if (numInCart + quantity <= 0) {
 				this.removeItem(item);
-				this.computeCost();
+				this.costComputer.computeCost(this);
 				return true;
 			}
 			if (quantity <= numInStock - numInCart) {
 				this.mapItemsToQuantity.replace(item, numInCart + quantity);
-				this.computeCost();
+				this.costComputer.computeCost(this);
 				return true;
 			} else {
 				// not enough in stock
@@ -39,7 +40,7 @@ public class Cart {
 		} else {
 			if (quantity <= numInStock && quantity > 0) {
 				this.mapItemsToQuantity.put(item, quantity);
-				this.computeCost();
+				this.costComputer.computeCost(this);
 				return true;
 			} else {
 				// not enough in stock
@@ -55,7 +56,7 @@ public class Cart {
 	boolean removeItem(Item item) {
 		if (this.checkIfContainsItemWithQuantity(item, 1)) {
 			this.mapItemsToQuantity.remove(item);
-			this.computeCost();
+			this.costComputer.computeCost(this);
 		} else {
 			return false;
 		}
@@ -73,7 +74,7 @@ public class Cart {
 	boolean applyDiscount(Discount discount) {
 		if (discount.checkIfAppliesToCart(this)) {
 			this.discounts.add(discount);
-			this.computeCost();
+			this.costComputer.computeCost(this);
 			return true;
 		} else {
 			if (this.discounts.contains(discount)) {
@@ -93,37 +94,16 @@ public class Cart {
 		}
 	}
 
-	double computeCost() {
-		double cost = 0;
-		Set<Item> items = this.mapItemsToQuantity.keySet();
-		Iterator<Item> it = items.iterator();
-		while (it.hasNext()) {
-			Item item = it.next();
-			int quantity = this.mapItemsToQuantity.get(item);
-			cost += item.getPrice() * quantity;
-		}
-		Iterator<Discount> discIt = this.discounts.iterator();
-		Set<Discount> appliedDiscounts = new HashSet<Discount>();
-		double costBeforeDiscounts = cost;
-		while (discIt.hasNext()) {
-			Discount discount = discIt.next();
-			cost = discount.apply(appliedDiscounts, costBeforeDiscounts);
-			appliedDiscounts.add(discount);
-		}
-		if (cost < 0) {
-			cost = 0;
-		}
-		double estimatedTax = 0.07; // hardcoded for testing. Replace with this.tax.estimateTax();
-		this.cost = cost;
-		return this.cost + (this.cost * estimatedTax);
-	}
-
 	public int getCartID() {
 		return this.cartID;
 	}
 
 	public double getCost() {
 		return this.cost;
+	}
+	
+	public void setCost(double cost) {
+		this.cost = cost;
 	}
 
 	public HashMap<Item, Integer> getMapItemsToQuantity() {

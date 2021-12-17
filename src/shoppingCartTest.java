@@ -11,10 +11,11 @@ import org.junit.jupiter.api.Test;
 class shoppingCartTest {
 
 	private Database db;
+	private CostComputer costComputer = new CostComputer();
 
 	@Test
 	void testAddAndRemoveItemToCart() {
-		Cart testCart = new Cart(1, db);
+		Cart testCart = new Cart(1, db, costComputer);
 		Item socks = new Item(1, "socks", "these socks are awesome", "", 2.99);
 		testCart.addItem(socks, 2);
 		assertTrue(testCart.getMapItemsToQuantity().containsKey(socks));
@@ -35,29 +36,29 @@ class shoppingCartTest {
 	@Test
 	void testComputeCostNoDiscounts() {
 		double actualCost = 0;
-		Cart testCart = new Cart(1, db);
+		Cart testCart = new Cart(1, db, costComputer);
 		assertEquals(actualCost, testCart.getCost(), 0);
 		Item socks = new Item(1, "socks", "these socks are awesome", "", 2.99);
 		testCart.addItem(socks, 2);
 		actualCost += 2.99 * 2;
-		assertEquals(actualCost + actualCost * 0.07, testCart.computeCost(), 0.01);
+		assertEquals(actualCost + actualCost * 0.07, costComputer.computeCost(testCart), 0.01);
 
 		testCart.updateQuantity(socks, 2);
 		actualCost += 2.99 * 2;
-		assertEquals(actualCost + actualCost * 0.07, testCart.computeCost(), 0.01);
+		assertEquals(actualCost + actualCost * 0.07, costComputer.computeCost(testCart), 0.01);
 
 		Item soda = new Item(3, "Pepsi", "Pepsi from Pepsi Co.", "", 1.50);
 		testCart.addItem(soda, 10);
 		actualCost += 1.50 * 10;
-		assertEquals(actualCost + actualCost * 0.07, testCart.computeCost(), 0.01);
+		assertEquals(actualCost + actualCost * 0.07, costComputer.computeCost(testCart), 0.01);
 		testCart.removeItem(socks);
 		actualCost -= 2.99 * 4;
-		assertEquals(actualCost + actualCost * 0.07, testCart.computeCost(), 0.01);
+		assertEquals(actualCost + actualCost * 0.07, costComputer.computeCost(testCart), 0.01);
 	}
 
 	@Test
 	void testUpdateQuantityOfItem() {
-		Cart testCart = new Cart(1, db);
+		Cart testCart = new Cart(1, db, costComputer);
 		Item socks = new Item(1, "socks", "these socks are awesome", "", 2.99);
 		testCart.addItem(socks, 2);
 		testCart.updateQuantity(socks, -1);
@@ -69,7 +70,7 @@ class shoppingCartTest {
 	
 	@Test
 	void testApplyDiscount() {
-		Cart testCart = new Cart(1, db);
+		Cart testCart = new Cart(1, db, costComputer);
 		Item socks = new Item(1, "socks", "these socks are awesome", "", 2.99);
 		Map<Item, Integer> discountItems = new HashMap<Item, Integer>();
 		discountItems.put(socks, 1);
@@ -82,12 +83,12 @@ class shoppingCartTest {
 		
 		double cost = 2 * 2.99 + 2 * 2.99 * 0.07;
 		double costAfterDiscount = cost - cost * 0.1;
-		assertEquals(costAfterDiscount, testCart.computeCost(), 0.01);
+		assertEquals(costAfterDiscount, costComputer.computeCost(testCart), 0.01);
 		
 		PercentageDiscount discount2 = new PercentageDiscount(0.1, "SOCKS2", discountItems);
 		testCart.applyDiscount(discount2);
 		double costAfterDiscount2 = cost - cost * 0.2;
-		assertEquals(costAfterDiscount2, testCart.computeCost(), 0.01);
+		assertEquals(costAfterDiscount2, costComputer.computeCost(testCart), 0.01);
 	}
 	
 	@Test
@@ -98,17 +99,17 @@ class shoppingCartTest {
 		socks.update("stock", "5");
 		assertEquals(5, socks.getNumInStock());
 		
-		Cart testCart = new Cart(1, db); 
+		Cart testCart = new Cart(1, db, costComputer); 
 		testCart.addItem(socks, 3);
-		assertEquals(2.99 * 3 + 2.99 * 3 * 0.07, testCart.computeCost(), 0.01);
+		assertEquals(2.99 * 3 + 2.99 * 3 * 0.07, costComputer.computeCost(testCart), 0.01);
 		socks.update("price", "2.00");
-		assertEquals(6.00 + 6.00 * 0.07, testCart.computeCost(), 0.01);
+		assertEquals(6.00 + 6.00 * 0.07, costComputer.computeCost(testCart), 0.01);
 		
 	}
 	
 	@Test
 	void testUpdateDiscount() {
-		Cart testCart = new Cart(1, db);
+		Cart testCart = new Cart(1, db, costComputer);
 		Item socks = new Item(1, "socks", "these socks are awesome", "", 2.99);
 		testCart.addItem(socks, 1);
 		Map<Item, Integer> discountItems = new HashMap<Item, Integer>();

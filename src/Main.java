@@ -13,6 +13,7 @@ import java.util.Set;
 public class Main {
 	
 	private static Database db;
+	private CostComputer costComputer = new CostComputer();
 	
 	public static void main(String[] args) {
 		db.connect();
@@ -93,7 +94,7 @@ public class Main {
 				if (item.getNumInStock() <= 0) {
 					cart.removeItem(item);
 				}
-				cart.computeCost();
+				costComputer.computeCost(cart);
 				db.saveCart(cart);
 			}
 			System.out.println("Item " + item.getName() + " was updated.");
@@ -112,7 +113,7 @@ public class Main {
 			Iterator<Cart> it = cartsWithDiscount.iterator();
 			while(it.hasNext()) {
 				Cart cart = it.next();
-				cart.computeCost();
+				costComputer.computeCost(cart);
 				db.saveCart(cart);
 			}
 			System.out.println("Discount with code " + discount.getCode() + " updated successfully.");
@@ -135,7 +136,7 @@ public class Main {
 				if (!discount.checkIfAppliesToCart(cart)) {
 					boolean didRemove = cart.removeDiscount(discount);
 					if (didRemove) {
-						cart.computeCost();	
+						costComputer.computeCost(cart);	
 						db.saveCart(cart);
 					}
 				}
