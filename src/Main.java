@@ -2,14 +2,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * 
- * Github access token: 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 
- * 
- * @author bowmanwb
- *
- */
-
 public class Main {
 	
 	private static Database db;
